@@ -1,0 +1,19 @@
+{
+  "name": "deep-breaths",
+  "version": "0.0.1",
+  "description": "take deep breaths",
+  "main": "dist.js",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch"
+  },
+  "author": "Matt Walsh <walsh9@gmail.com> (https://walsh9.net)",
+  "license": "MIT",
+  "devDependencies": {
+    "@walsh9/topiary": "^0.1.0",
+    "babel-cli": "^6.18.0",
+    "babel-loader": "^6.2.7",
+    "babel-preset-es2015": "^6.18.0",
+    "webpack": "^1.13.3"
+  }
+}
