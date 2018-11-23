@@ -22,7 +22,7 @@ var deterministicTree = function(canvas, treeArray, limitArray) {
     color: Topiary.Color.new(Math.floor(treeArray[HUE] * 360 + 70), 20, 20),
     height:    treeArray[HEIGHT] * 100 + 20,
     thickness: treeArray[THICKNESS] * 8 + 2,
-    depth: 12,
+    depth: 7,
     rainbow: false,
     colorShiftRate: 0,
     delay: 0,
@@ -32,8 +32,8 @@ var deterministicTree = function(canvas, treeArray, limitArray) {
     maxLeftAngle: treeArray[LEFT_ANGLE] * limitArray[LEFT_ANGLE],
     minRightAngle: treeArray[RIGHT_ANGLE] * limitArray[RIGHT_ANGLE],
     maxRightAngle: treeArray[RIGHT_ANGLE] * limitArray[RIGHT_ANGLE],
-    minHeightChange: treeArray[HEIGHT_CHANGE] * 0.1 + 0.7,
-    maxHeightChange: treeArray[HEIGHT_CHANGE] * 0.1 + 0.7,
+    minHeightChange: treeArray[HEIGHT_CHANGE] * 0.1 + 0.6,
+    maxHeightChange: treeArray[HEIGHT_CHANGE] * 0.1 + 0.6,
     minThicknessChange: treeArray[THICKNESS_CHANGE] * 0.1 + 0.7,
     maxThicknessChange: treeArray[THICKNESS_CHANGE] * 0.1 + 0.7,
   };
@@ -69,10 +69,6 @@ let getBreathPoint = function(time, breathCycle) {
   }
   return breath;
 };
-
-let limitArray = [];
-limitArray[LEFT_ANGLE] = Math.random() * 55 + 10;
-limitArray[RIGHT_ANGLE] = Math.random() * 55 + 10;
 
 var arrayOfRandomFloats = function(num) {
   var floats = [];
@@ -118,10 +114,11 @@ var fitCanvasToWindow = function() {
 window.addEventListener('resize', fitCanvasToWindow);
 
 let breathCycle = {};
-breathCycle.inhale = 4000;
+breathCycle.inhale = 5000;
 breathCycle.holdIn = 0;
-breathCycle.exhale = 3200;
+breathCycle.exhale = 4200;
 breathCycle.holdOut = 0;
+breathCycle.total = breathCycle.inhale + breathCycle.holdIn + breathCycle.exhale + breathCycle.holdOut;
 
 let runtime = 0;
 let interval = 50;
@@ -130,17 +127,45 @@ let canvas = document.getElementById("canvas");
 let prompt = document.getElementById('prompt');
 let ctx = canvas.getContext("2d");
 
+
 let skyGradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
 skyGradient.addColorStop(0, "#00ffff");
 skyGradient.addColorStop(1, "#0066ff");
 
+let drawLeaf = function({startPoint, depth, thickness, id}) {
+  if (depth < 4) {
+    ctx.fillStyle = roots.colors[id % 3];
+    ctx.beginPath();
+    ctx.arc(startPoint.x, startPoint.y, 20 * breathPoint.value, leafAngle, Math.PI + leafAngle);
+    ctx.fill();
+  }
+};
 
-var draw = function () {
+let randomizeTree = function(roots) {
+  roots.colors = roots.colors || [];
+  roots.colors[0] = Topiary.Color.random().toStyle();
+  roots.colors[1] = Topiary.Color.random().toStyle();
+  roots.colors[2] = Topiary.Color.random().toStyle();
+  roots.limits = roots.limits || [];
+  roots.limits[LEFT_ANGLE] = Math.random() * 80;
+  roots.limits[RIGHT_ANGLE] = Math.random() * 80;
+};
+
+let roots = {};
+randomizeTree(roots);
+let breathPoint = 0;
+let leafAngle = 0;
+let draw = function () {
+  if (runtime % breathCycle.total - interval < 0) {
+    randomizeTree(roots);
+  }
   runtime += interval;
-  let breathPoint = getBreathPoint(runtime, breathCycle);
-  let tree = deterministicTree(canvas, change(seed, runtime, breathCycle), limitArray);
+  breathPoint = getBreathPoint(runtime, breathCycle);
+  leafAngle = Math.cos(runtime) * 0.2;
+  let tree = deterministicTree(canvas, change(seed, runtime, breathCycle), roots.limits);
+  tree.on('leafcreated', drawLeaf);
+  tree.on('branchcreated', drawLeaf);
   updatePrompt(prompt, breathPoint);
-
 
   ctx.fillStyle = skyGradient;
   ctx.fillRect(0,0,canvas.width, canvas.height);
